@@ -1,0 +1,39 @@
+name: Docker CI
+on:
+  push:
+    branches:
+      - docker-ci
+
+jobs:
+  Linux:
+    name: ${{ matrix.dockerImage }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dockerTag: [ amd64, armv6hf, armv7hf, aarch64 ]
+        include:
+          - dockerTag: amd64
+            dockerImage: Debian Stretch (AMD64)
+            dockerFile: amd64.stretch
+          - dockerTag: armv6hf
+            dockerImage: Debian Stretch (Raspberry Pi v1 & ZERO)
+            dockerFile: armv6hf.stretch
+          - dockerTag: armv7hf
+            dockerImage: Debian Stretch (Raspberry Pi 2 & 3)
+            dockerFile: armv7hf.stretch
+          - dockerTag: aarch64
+            dockerImage: Debian Stretch (Generic AARCH64)
+            dockerFile: aarch64.stretch
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Build and tag docker image
+        run: docker build -t docker.pkg.github.com/hyperion-project/hyperion.ng/${{ matrix.dockerTag }}:latest -f ${{ matrix.dockerFile }} .
+
+#      - name: Publish to GitHub Package Registry
+#        run: |
+#          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com --username ${{ github.actor }} --password-stdin
+#          docker push docker.pkg.github.com/hyperion-project/hyperion.ng/${{ matrix.dockerTag }}:latest
+

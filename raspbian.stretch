@@ -1,0 +1,20 @@
+FROM balenalib/rpi-raspbian:stretch
+
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
+	&& apt-get update \
+	&& apt-get install -y \
+	git \
+	cmake \
+	python3-dev \
+	qtbase5-dev \
+	libqt5serialport5-dev \
+	build-essential \
+	libusb-1.0-0-dev \
+	libavahi-core-dev \
+	libavahi-compat-libdnssd-dev \
+	libjpeg-dev \
+	libmbedtls-dev \
+	libqt5sql5-sqlite \
+	zlib1g-dev \
+	libssl1.0-dev \
+	libraspberrypi-dev
