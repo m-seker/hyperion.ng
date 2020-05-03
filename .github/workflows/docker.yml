@@ -32,8 +32,8 @@ jobs:
       - name: Build and tag docker image
         run: docker build -t docker.pkg.github.com/hyperion-project/hyperion.ng/${{ matrix.dockerTag }}:latest -f ${{ matrix.dockerFile }} .
 
-#      - name: Publish to GitHub Package Registry
-#        run: |
-#          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com --username ${{ github.actor }} --password-stdin
-#          docker push docker.pkg.github.com/hyperion-project/hyperion.ng/${{ matrix.dockerTag }}:latest
+      - name: Publish to GitHub Package Registry
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com --username ${{ github.actor }} --password-stdin
+          docker push docker.pkg.github.com/hyperion-project/hyperion.ng/${{ matrix.dockerTag }}:latest
 
