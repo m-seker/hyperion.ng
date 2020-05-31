@@ -7,7 +7,7 @@ on:
 jobs:
   Linux:
     name: ${{ matrix.dockerImage }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         dockerTag: [ amd64, armv6hf, armv7hf, aarch64 ]
@@ -15,15 +15,27 @@ jobs:
           - dockerTag: amd64
             dockerImage: Debian Stretch (AMD64)
             dockerFile: amd64.stretch
+            os: ubuntu-latest
           - dockerTag: armv6hf
             dockerImage: Debian Stretch (Raspberry Pi v1 & ZERO)
             dockerFile: armv6hf.stretch
+            os: ubuntu-latest
           - dockerTag: armv7hf
             dockerImage: Debian Stretch (Raspberry Pi 2 & 3)
             dockerFile: armv7hf.stretch
+            os: ubuntu-latest
           - dockerTag: aarch64
             dockerImage: Debian Stretch (Generic AARCH64)
             dockerFile: aarch64.stretch
+            os: ubuntu-latest
+          - dockerTag: rpi-raspbian-stretch
+            dockerImage: Raspbian Stretch
+            dockerFile: raspbian.stretch
+            os: RPi3
+          - dockerTag: rpi-raspbian-buster
+            dockerImage: Raspbian Buster
+            dockerFile: raspbian.buster
+            os: RPi3
 
     steps:
       - name: Checkout
