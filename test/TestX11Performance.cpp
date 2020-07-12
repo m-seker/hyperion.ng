@@ -1,4 +1,3 @@
-
 #include <QElapsedTimer>
 
 #include <utils/Image.h>
@@ -8,18 +7,19 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-void foo_1(int pixelDecimation)
+#include <gtest/gtest.h>
+
+using namespace testing;
+
+const int PIXEL_DECIMATION = 10;
+
+TEST(TestX11Performance, foo_1)
 {
 	int cropWidth  = 0;
 	int cropHeight = 0;
 
-	Image<ColorRgb> image(64, 64);
-
-	 /// Reference to the X11 display (nullptr if not opened)
-	Display * x11Display;
-
 	const char * display_name = nullptr;
-	x11Display = XOpenDisplay(display_name);
+	Display * x11Display = XOpenDisplay(display_name);
 
 	std::cout << "Opened display: " << x11Display << std::endl;
 
@@ -31,9 +31,8 @@ void foo_1(int pixelDecimation)
 	std::cout << "[" << screenWidth << "x" << screenHeight <<"]" << std::endl;
 
 	// Update the size of the buffer used to transfer the screenshot
-	int width  = (screenWidth  - 2 * cropWidth  + pixelDecimation/2) / pixelDecimation;
-	int height = (screenHeight - 2 * cropHeight + pixelDecimation/2) / pixelDecimation;
-	image.resize(width, height);
+	int width  = (screenWidth  - 2 * cropWidth  + PIXEL_DECIMATION/2) / PIXEL_DECIMATION;
+	int height = (screenHeight - 2 * cropHeight + PIXEL_DECIMATION/2) / PIXEL_DECIMATION;
 
 	const int croppedWidth  = screenWidth  - 2*cropWidth;
 	const int croppedHeight = screenHeight - 2*cropHeight;
@@ -46,10 +45,11 @@ void foo_1(int pixelDecimation)
 	std::cout << "Captured image: " << xImage << std::endl;
 
 	// Copy the capture XImage to the local image (and apply required decimation)
+	Image<ColorRgb> image(width, height);
 	ColorRgb * outputPtr = image.memptr();
-	for (int iY=(pixelDecimation/2); iY<croppedHeight; iY+=pixelDecimation)
+	for (int iY=(PIXEL_DECIMATION/2); iY<croppedHeight; iY+=PIXEL_DECIMATION)
 	{
-		for (int iX=(pixelDecimation/2); iX<croppedWidth; iX+=pixelDecimation)
+		for (int iX=(PIXEL_DECIMATION/2); iX<croppedWidth; iX+=PIXEL_DECIMATION)
 		{
 			// Extract the pixel from the X11-image
 			const uint32_t pixel = uint32_t(XGetPixel(xImage, iX, iY));
@@ -72,18 +72,13 @@ void foo_1(int pixelDecimation)
 	XCloseDisplay(x11Display);
 }
 
-void foo_2(int pixelDecimation)
+TEST(TestX11Performance, foo2)
 {
 	int cropWidth  = 0;
 	int cropHeight = 0;
 
-	Image<ColorRgb> image(64, 64);
-
-	 /// Reference to the X11 display (nullptr if not opened)
-	Display * x11Display;
-
 	const char * display_name = nullptr;
-	x11Display = XOpenDisplay(display_name);
+	Display * x11Display = XOpenDisplay(display_name);
 
 	XWindowAttributes window_attributes_return;
 	XGetWindowAttributes(x11Display, DefaultRootWindow(x11Display), &window_attributes_return);
@@ -93,9 +88,8 @@ void foo_2(int pixelDecimation)
 	std::cout << "[" << screenWidth << "x" << screenHeight <<"]" << std::endl;
 
 	// Update the size of the buffer used to transfer the screenshot
-	int width  = (screenWidth  - 2 * cropWidth  + pixelDecimation/2) / pixelDecimation;
-	int height = (screenHeight - 2 * cropHeight + pixelDecimation/2) / pixelDecimation;
-	image.resize(width, height);
+	int width  = (screenWidth  - 2 * cropWidth  + PIXEL_DECIMATION/2) / PIXEL_DECIMATION;
+	int height = (screenHeight - 2 * cropHeight + PIXEL_DECIMATION/2) / PIXEL_DECIMATION;
 
 	const int croppedWidth  = screenWidth  - 2*cropWidth;
 	const int croppedHeight = screenHeight - 2*cropHeight;
@@ -104,10 +98,11 @@ void foo_2(int pixelDecimation)
 	timer.start();
 
 	// Copy the capture XImage to the local image (and apply required decimation)
+	Image<ColorRgb> image(width, height);
 	ColorRgb * outputPtr = image.memptr();
-	for (int iY=(pixelDecimation/2); iY<croppedHeight; iY+=pixelDecimation)
+	for (int iY=(PIXEL_DECIMATION/2); iY<croppedHeight; iY+=PIXEL_DECIMATION)
 	{
-		for (int iX=(pixelDecimation/2); iX<croppedWidth; iX+=pixelDecimation)
+		for (int iX=(PIXEL_DECIMATION/2); iX<croppedWidth; iX+=PIXEL_DECIMATION)
 		{
 			XImage * xImage = XGetImage(x11Display, DefaultRootWindow(x11Display), iX, iY, 1, 1, AllPlanes, ZPixmap);
 			// Extract the pixel from the X11-image
@@ -127,13 +122,6 @@ void foo_2(int pixelDecimation)
 	}
 	std::cout << "Time required: " << timer.elapsed() << " ms" << std::endl;
 
-
 	XCloseDisplay(x11Display);
 }
 
-int main()
-{
-	foo_1(10);
-	foo_2(10);
-	return 0;
-}

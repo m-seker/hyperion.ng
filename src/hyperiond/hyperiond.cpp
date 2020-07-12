@@ -117,8 +117,6 @@ HyperionDaemon::HyperionDaemon(const QString rootPath, QObject *parent, const bo
 	// spawn all Hyperion instances (non blocking)
 	_instanceManager->startAll();
 
-	//connect(_hyperion,SIGNAL(closing()),this,SLOT(freeObjects())); // TODO for app restart, refactor required
-
 	//Cleaning up Hyperion before quit
 	connect(parent, SIGNAL(aboutToQuit()), this, SLOT(freeObjects()));
 

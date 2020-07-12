@@ -54,7 +54,7 @@ class LedDeviceWrapper;
 /// The main class of Hyperion. This gives other 'users' access to the attached LedDevice through
 /// the priority muxer.
 ///
-class Hyperion : public QObject
+class Hyperion : public IHyperion
 {
 	Q_OBJECT
 public:

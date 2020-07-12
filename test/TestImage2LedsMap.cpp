@@ -7,7 +7,11 @@
 #include <utils/hyperion.h>
 #include <hyperion/ImageToLedsMap.h>
 
-int main()
+#include <gtest/gtest.h>
+
+using namespace testing;
+
+TEST(TestImage2LedsMap, main)
 {
 	QString homeDir = getenv("RASPILIGHT_HOME");
 
@@ -15,11 +19,8 @@ int main()
 	const QString configFile = homeDir + "/hyperion.config.json";
 
 	QJsonObject config;
-	if (QJsonFactory::load(schemaFile, configFile, config) < 0)
-	{
-		std::cerr << "UNABLE TO LOAD CONFIGURATION" << std::endl;
-		return -1;
-	}
+	int retval = QJsonFactory::load(schemaFile, configFile, config);
+	ASSERT_GE(0, retval) << "Unable to load configuration : " << schemaFile.toStdString();
 
 	const LedString ledString = hyperion::createLedString(config["leds"].toArray(), hyperion::createColorOrder(config["device"].toObject()));
 
@@ -37,6 +38,4 @@ int main()
 		std::cout << color;
 	}
 	std::cout << "]" << std::endl;
-
-	return 0;
 }

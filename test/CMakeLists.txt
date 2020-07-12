@@ -1,51 +1,74 @@
 # Needed for testing non-public components
 include_directories(../libsrc)
 
-find_package(Qt5Widgets REQUIRED)
+enable_testing()
 
-MACRO (link_to_hyperion TARGET)
-	target_link_libraries( ${TARGET} blackborder leddevice jsonserver hyperion-utils hyperion effectengine )
-ENDMACRO()
+find_package(Qt5Test REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(GTest REQUIRED)
+find_package(GMock REQUIRED)
+
+list(APPEND TEST_SOURCES
+	TestConfigFile.cpp
+	TestRgbImage.cpp
+	TestBlackBorderDetector.cpp
+	TestBlackBorderProcessor.cpp
+	TestQtScreenshot.cpp
+	TestQRegExp.cpp
+	TestImage2LedsMap.cpp
+	TestRunner.cpp
+	TestQtScreenshot.cpp
+)
+list(APPEND TEST_LIBRARIES
+	blackborder
+	leddevice
+	jsonserver
+	hyperion-utils
+	hyperion
+	effectengine
+	Qt5::Widgets
+)
 
 if(ENABLE_SPIDEV)
-	# Add the simple test executable 'TestSpi'
-	add_executable(test_spi TestSpi.cpp)
-	target_link_libraries( test_spi leddevice hyperion-utils hyperion )
-	add_executable(spidev_test spidev_test.c)
-	add_executable(gpio2spi switchPinCtrl.c)
+	list(APPEND TEST_SOURCES
+		TestSpi.cpp
+		spidev_test.c
+		switchPinCtrl.c
+	)
+
+	list(APPEND TEST_LIBRARIES
+		leddevice
+		hyperion-utils
+		hyperion
+	)
 endif(ENABLE_SPIDEV)
-
-add_executable(test_configfile TestConfigFile.cpp)
-link_to_hyperion(test_configfile)
-
-add_executable(test_ImageRgb TestRgbImage.cpp)
-link_to_hyperion(test_ImageRgb)
-
-add_executable(test_blackborderdetector TestBlackBorderDetector.cpp)
-link_to_hyperion(test_blackborderdetector)
-
-add_executable(test_qregexp TestQRegExp.cpp)
-target_link_libraries(test_qregexp Qt5::Widgets)
-
-add_executable(test_qtscreenshot TestQtScreenshot.cpp)
-target_link_libraries(test_qtscreenshot Qt5::Widgets)
 
 if(ENABLE_X11)
 	find_package(X11 REQUIRED)
-	add_executable(test_x11performance TestX11Performance.cpp)
-	target_link_libraries(test_x11performance ${X11_LIBRARIES} Qt5::Widgets)
+
+	list(APPEND TEST_SOURCES
+		TestX11Performance.cpp
+	)
+
+	list(APPEND TEST_LIBRARIES
+		 ${X11_LIBRARIES}
+	)
 endif(ENABLE_X11)
 
-######### These tests are broken. May they fix someone ##########
-
-# add_executable(test_image2ledsmap TestImage2LedsMap.cpp)
-# link_to_hyperion(test_image2ledsmap)
-
-# if (ENABLE_DISPMANX)
+ if (ENABLE_DISPMANX)
 #	add_subdirectory(dispmanx2png)
-# endif (ENABLE_DISPMANX)
+ endif (ENABLE_DISPMANX)
 
-# add_executable(test_blackborderprocessor TestBlackBorderProcessor.cpp)
-# link_to_hyperion(test_blackborderprocessor)
+include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(${GMOCK_INCLUDE_DIRS})
+add_executable(hyperion-test ${TEST_SOURCES})
 
-###################################################
+target_link_libraries(hyperion-test
+	${TEST_LIBRARIES}
+	${GTEST_BOTH_LIBRARIES}
+	${GMOCK_LIBRARY}
+)
+
+add_test(NAME    test
+	 COMMAND hyperion-test
+)

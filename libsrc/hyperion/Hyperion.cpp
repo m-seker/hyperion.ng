@@ -151,15 +151,10 @@ void Hyperion::stop()
 	thread()->wait();
 }
 
-void Hyperion::freeObjects(bool emitCloseSignal)
+void Hyperion::freeObjects()
 {
 	// switch off all leds
 	clear(-1,true);
-
-	if (emitCloseSignal)
-	{
-		emit closing();
-	}
 
 	// delete components on exit of hyperion core
 	delete _boblightServer;

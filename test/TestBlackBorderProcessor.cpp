@@ -11,7 +11,10 @@
 // Blackborder includes
 #include "blackborder/BlackBorderProcessor.h"
 
+#include <gtest/gtest.h>
+
 using namespace hyperion;
+using namespace testing;
 
 ColorRgb randomColor()
 {
@@ -42,68 +45,47 @@ Image<ColorRgb> createImage(unsigned width, unsigned height, unsigned topBorder,
 	return image;
 }
 
-int main()
+TEST(TestBlackBorderProcessor, main)
 {
-//	unsigned unknownCnt = 600;
 	unsigned borderCnt  = 50;
-//	unsigned blurCnt    = 0;
 	QJsonObject config;
 
-//	BlackBorderProcessor processor(unknownCnt, borderCnt, blurCnt, 3, config);
 	BlackBorderProcessor processor(config);
 
 	// Start with 'no border' detection
 	Image<ColorRgb> noBorderImage = createImage(64, 64, 0, 0);
-	for (unsigned i=0; i<10; ++i)
+	for (unsigned i=0; i < 10; ++i)
 	{
 		bool newBorder = processor.process(noBorderImage);
 		if (i == 0)
 		{
 			// Switch to 'no border' should immediate
-			if (!newBorder)
-			{
-				std::cerr << "Failed to detect 'no border' when required" << std::endl;
-				exit(EXIT_FAILURE);
-			}
+			ASSERT_TRUE(newBorder) << "Failed to detect 'no border' when required";
 		}
 		else
 		{
-			if (newBorder)
-			{
-				std::cerr << "Incorrectly detected new border, when there in none" << std::endl;
-				exit(EXIT_FAILURE);
-			}
+			ASSERT_FALSE(newBorder) << "Incorrectly detected new border, when there in none";
 		}
 	}
 
 	// Verify that the border is indeed
-	if (processor.getCurrentBorder().unknown != false || processor.getCurrentBorder().horizontalSize != 0 || processor.getCurrentBorder().verticalSize != 0)
-	{
-		std::cerr << "Incorrectlty identified 'no border'" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+	ASSERT_FALSE(processor.getCurrentBorder().unknown) 	  << "Incorrectlty identified 'no border'";
+	ASSERT_EQ(0, processor.getCurrentBorder().horizontalSize) << "Incorrectlty identified 'no border'";
+	ASSERT_EQ(0, processor.getCurrentBorder().verticalSize)   << "Incorrectlty identified 'no border'";
 
 	int borderSize = 12;
 	Image<ColorRgb> horzImage = createImage(64, 64, borderSize, 0);
 	for (unsigned i=0; i<borderCnt*2; ++i)
 	{
 		bool newBorder = processor.process(horzImage);
-		if (i == borderCnt+10)// 10 frames till new border gets a chance to proof consistency
-		{
-			if (!newBorder)
-			{
-				std::cerr << "Failed to detect 'horizontal border' when required after " << borderCnt << " images" << std::endl;
-				exit(EXIT_FAILURE);
-			}
-		}
-		else
-		{
-			if (newBorder)
-			{
-				std::cerr << "Incorrectly detected new border, when there in none" << std::endl;
-				exit(EXIT_FAILURE);
-			}
-		}
+                if (i == borderCnt+10)// 10 frames till new border gets a chance to proof consistency
+                {
+                        ASSERT_TRUE(newBorder) << "Failed to detect 'no border' when required after " << borderCnt << " images";
+                }
+                else
+                {
+                        ASSERT_FALSE(newBorder) << "Incorrectly detected no border, when there in none";
+                }
 	}
 
 	if (processor.getCurrentBorder().unknown != false || processor.getCurrentBorder().horizontalSize != borderSize || processor.getCurrentBorder().verticalSize != 0)
@@ -119,30 +101,19 @@ int main()
 		bool newBorder = processor.process(noBorderImage);
 		if (i == borderCnt+10)// 10 frames till new border gets a chance to proof consistency
 		{
-			if (!newBorder)
-			{
-				std::cerr << "Failed to detect 'no border' when required after " << borderCnt << " images" << std::endl;
-				exit(EXIT_FAILURE);
-			}
+			ASSERT_TRUE(newBorder) << "Failed to detect 'no border' when required after " << borderCnt << " images";
 		}
 		else
 		{
-			if (newBorder)
-			{
-				std::cerr << "Incorrectly detected no border, when there in none" << std::endl;
-				exit(EXIT_FAILURE);
-			}
+			ASSERT_FALSE(newBorder) << "Incorrectly detected no border, when there in none";
 		}
 	}
 
-		// Check switch back to no border
-		if ( (processor.getCurrentBorder().unknown != false || processor.getCurrentBorder().horizontalSize != 0 || processor.getCurrentBorder().verticalSize != 0))
-		{
-			std::cerr << "Failed to switch back to 'no border'" << std::endl;
-			exit(EXIT_FAILURE);
-		}
+	// Check switch back to no border
 
-
+	ASSERT_FALSE(processor.getCurrentBorder().unknown)	  << "Failed to switch back to 'no border'";
+	ASSERT_EQ(0, processor.getCurrentBorder().horizontalSize) << "Failed to switch back to 'no border'";
+	ASSERT_EQ(0, processor.getCurrentBorder().verticalSize)   << "Failed to switch back to 'no border'";
 
 	Image<ColorRgb> vertImage = createImage(64, 64, 0, borderSize);
 	for (unsigned i=0; i<borderCnt*2; ++i)
@@ -150,31 +121,16 @@ int main()
 		bool newBorder = processor.process(vertImage);
 		if (i == borderCnt+10)// 10 frames till new border gets a chance to proof consistency
 		{
-			if (!newBorder)
-			{
-				std::cerr << "Failed to detect 'vertical border' when required after " << borderCnt << " images" << std::endl;
-				exit(EXIT_FAILURE);
-			}
+			ASSERT_TRUE(newBorder) << "Failed to detect 'vertical border' when required after " << borderCnt << " images";
 		}
 		else
 		{
-			if (newBorder)
-			{
-				std::cerr << "Incorrectly detected new border, when there in none" << std::endl;
-				exit(EXIT_FAILURE);
-			}
+			ASSERT_FALSE(newBorder) << "Incorrectly detected new border, when there in none";
 		}
 	}
 
-	if (processor.getCurrentBorder().unknown != false || processor.getCurrentBorder().horizontalSize != 0 || processor.getCurrentBorder().verticalSize != borderSize)
-	{
-		std::cerr << "Incorrectlty found 'vertical border'" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	// Switch back (in one shot) to no border
-//	assert(processor.process(noBorderImage));
-//	assert(processor.getCurrentBorder().verticalSize == 0 && processor.getCurrentBorder().horizontalSize == 0);
-
-	return 0;
+	ASSERT_FALSE(processor.getCurrentBorder().unknown) 		 << "Incorrectlty found 'vertical border'";
+	ASSERT_EQ(0, processor.getCurrentBorder().horizontalSize)	 << "Incorrectlty found 'vertical border'";
+	ASSERT_EQ(borderSize, processor.getCurrentBorder().verticalSize) << "Incorrectlty found 'vertical border'";
 }
+

@@ -15,8 +15,16 @@
 
 #include "../libsrc/leddevice/dev_spi/LedDeviceWs2801.h"
 
-QJsonObject deviceConfig;
+#include <gtest/gtest.h>
 
+using namespace testing;
+
+class TestSpi : public Test
+{
+        int main(int argc, char** argv);
+};
+
+QJsonObject deviceConfig;
 
 void setColor(char* colorStr)
 {
@@ -131,7 +139,7 @@ void signal_handler(int signum)
 	_running = false;
 }
 
-int main(int argc, char** argv)
+int TestSpi::main(int argc, char** argv)
 {
 	if (sizeof(ColorRgb) != 3)
 	{
@@ -169,3 +177,4 @@ int main(int argc, char** argv)
 
 	return 0;
 }
+

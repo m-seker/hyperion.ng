@@ -9,6 +9,15 @@
 #include <hyperion/LedString.h>
 #include "HyperionConfig.h"
 
+#include <gtest/gtest.h>
+
+using namespace testing;
+
+class TestConfigFile : public Test
+{
+	int main(int argc, char** argv);
+};
+
 bool loadConfig(const QString & configFile, bool correct, bool ignore)
 {
 	// make sure the resources are loaded (they may be left out after static linking)
@@ -71,7 +80,7 @@ void usage()
 	qDebug() << "\t--ac-ignore-required - for json auto correction without paying attention 'required' keyword in hyperion schema";
 }
 
-int main(int argc, char** argv)
+int TestConfigFile::main(int argc, char** argv)
 {
 	if (argc < 2)
 	{
@@ -102,7 +111,7 @@ int main(int argc, char** argv)
 			qDebug() << "PASSED";
 		return 0;
 	}
-	catch (std::runtime_error exception)
+	catch (const std::runtime_error & exception)
 	{
 		qDebug() << "FAILED";
 		qDebug() << exception.what();
@@ -110,3 +119,4 @@ int main(int argc, char** argv)
 
 	return 1;
 }
+

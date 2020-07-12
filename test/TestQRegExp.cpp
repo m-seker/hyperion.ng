@@ -7,7 +7,11 @@
 #include <QString>
 #include <QStringList>
 
-int main()
+#include <gtest/gtest.h>
+
+using namespace testing;
+
+TEST(TestQRegExp, execute)
 {
 	QString testString = "1-9, 11, 12,13,16-17";
 
@@ -27,7 +31,7 @@ int main()
 	{
 		if (!overallExp.exactMatch(testString)) {
 			std::cout << "No correct match" << std::endl;
-			return -1;
+			throw std::runtime_error("No correct match");
 		}
 		QStringList splitString = testString.split(QChar(','));
 		for (int i=0; i<splitString.size(); ++i) {
@@ -45,6 +49,5 @@ int main()
 			}
 		}
 	}
-
-	return 0;
 }
+

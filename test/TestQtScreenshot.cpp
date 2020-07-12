@@ -1,28 +1,30 @@
-
 // STL includes
+#include <chrono>
 #include <iostream>
 
-// QT includes
+// Qt includes
 #include <QApplication>
 #include <QDesktopWidget>
-#include <QPixmap>
-#include <QFile>
-#include <QRgb>
 #include <QScreen>
 
-#include <QElapsedTimer>
-
-// Utils includes
+// Hyperion includes
 #include <utils/Image.h>
-#include <utils/ColorRgb.h>
+
+#include <gtest/gtest.h>
+
+using namespace testing;
 
 void createScreenshot(const int cropHorizontal, const int cropVertical, const int decimation, Image<ColorRgb> & image)
 {
+	int argc      = {};
+	char * argv[] = {};
+	QApplication app(argc, argv);
+
 	// Create the full size screenshot
 	QScreen *screen = QApplication::primaryScreen();
 	const QRect screenSize = screen->availableGeometry();
-	const int croppedWidth  = screenSize.width()  - 2*cropVertical;
-	const int croppedHeight = screenSize.height() - 2*cropHorizontal;
+	const int croppedWidth  = screenSize.width()  - 2 * cropVertical;
+	const int croppedHeight = screenSize.height() - 2 * cropHorizontal;
 	const QPixmap fullSizeScreenshot = screen->grabWindow(QApplication::desktop()->winId(), cropVertical, cropHorizontal, croppedWidth, croppedHeight);
 
 	// Scale the screenshot to the required size
@@ -37,9 +39,9 @@ void createScreenshot(const int cropHorizontal, const int cropVertical, const in
 	image.resize(width, height);
 
 	// Copy the data into the output image
-	for (int y=0; y<qImage.height(); ++y)
+	for (int y = 0; y < qImage.height(); ++y)
 	{
-		for (int x=0; x<qImage.width(); ++x)
+		for (int x = 0; x < qImage.width(); ++x)
 		{
 			// Get the pixel at [x;y] (format int32 #AARRGGBB)
 			const QRgb inPixel = qImage.pixel(x,y);
@@ -51,24 +53,30 @@ void createScreenshot(const int cropHorizontal, const int cropVertical, const in
 			outPixel.blue  = (inPixel & 0x000000ff);
 		}
 	}
+
 }
 
-int main(int argc, char** argv)
+TEST(TestQtScreenshot, TestScreenshotTimeIsLessThanMaximumAllowedTime)
 {
-	int decimation = 10;
-
-	QApplication app(argc, argv);
-	QElapsedTimer timer;
+	const int EVALUATION_COUNT		 = 100;
+	const int MAX_ALLOWED_SCREENSHOT_TIME    = 100;
+	const int DECIMATION			 = 10;
 
 	Image<ColorRgb> screenshot(64,64);
 
-	int loopCnt = 100;
-	timer.start();
-	for (int i=0; i<loopCnt; ++i)
-	{
-		createScreenshot(0,0, decimation, screenshot);
-	}
-	std::cout << "Time required for single screenshot: " << timer.elapsed()/loopCnt << "ms" << std::endl;
+	const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-	return 0;
+	for (int i = 0; i < EVALUATION_COUNT; ++i)
+	{
+		createScreenshot(0,0, DECIMATION, screenshot);
+	}
+
+	const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	const int duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+
+	ASSERT_LE(duration/EVALUATION_COUNT, MAX_ALLOWED_SCREENSHOT_TIME)
+		<< "Taking screenshot takes more time than maximum allowed value";
+
+	std::cout << "Time required for single screenshot: " << duration/EVALUATION_COUNT << "ms" << std::endl;
 }
+
