@@ -71,7 +71,7 @@ void ImageResampler::processImage(const uint8_t * data, int width, int height, i
 
 			switch (pixelFormat)
 			{
-			case PixelFormat::UYVY:
+				case PixelFormat::UYVY:
 				{
 					int index = lineLength * ySource + (xSource << 1);
 					uint8_t y = data[index+1];
@@ -123,7 +123,7 @@ void ImageResampler::processImage(const uint8_t * data, int width, int height, i
 				break;
 #ifdef HAVE_JPEG_DECODER
 				case PixelFormat::MJPEG:
-					break;
+				break;
 #endif
 				case PixelFormat::NO_CHANGE:
 					Error(Logger::getInstance("ImageResampler"), "Invalid pixel format given");
