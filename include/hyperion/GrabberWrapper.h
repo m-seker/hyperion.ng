@@ -93,10 +93,7 @@ public:
 	{
 		unsigned w = grabber.getImageWidth();
 		unsigned h = grabber.getImageHeight();
-		if ( _image.width() != w || _image.height() != h)
-		{
-			_image.resize(w, h);
-		}
+		_image.resize(w, h);
 
 		int ret = grabber.grabFrame(_image);
 		if (ret >= 0)

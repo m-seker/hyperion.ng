@@ -12,6 +12,8 @@
 #include "hyperion/Hyperion.h"
 #include <utils/JsonUtils.h>
 
+#include <sys/time.h>
+
 //std includes
 #include <sstream>
 #include <iomanip>
@@ -186,6 +188,12 @@ int LedDevice::updateLeds(const std::vector<ColorRgb>& ledValues)
 		qint64 elapsedTimeMs = _lastWriteTime.msecsTo(QDateTime::currentDateTime());
 		if (_latchTime_ms == 0 || elapsedTimeMs >= _latchTime_ms)
 		{
+    struct timeval te;
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("Updating LEDs : %lld\n\n\n\n", milliseconds);
+
+
 			//std::cout << "LedDevice::updateLeds(), Elapsed time since last write (" << elapsedTimeMs << ") ms > _latchTime_ms (" << _latchTime_ms << ") ms" << std::endl;
 			retval = write(ledValues);
 			_lastWriteTime = QDateTime::currentDateTime();

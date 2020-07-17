@@ -67,7 +67,7 @@ void HyperionIManager::toggleStateAllInstances(const bool& pause)
 	}
 }
 
-bool HyperionIManager::startInstance(const quint8& inst, const bool& block)
+bool HyperionIManager::startInstance(const quint8& inst)
 {
 	if(_instanceTable->instanceExist(inst))
 	{
@@ -98,11 +98,6 @@ bool HyperionIManager::startInstance(const quint8& inst, const bool& block)
 			// update db
 			_instanceTable->setLastUse(inst);
 			_instanceTable->setEnable(inst, true);
-
-			if(block)
-			{
-				while(!hyperionThread->isRunning()){};
-			}
 
 			return true;
 		}

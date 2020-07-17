@@ -111,6 +111,9 @@ public:
 
 	void resize(const unsigned width, const unsigned height)
 	{
+		if (width == _width && height == _height)
+			return;
+
 		if ((width * height) > unsigned((_width * _height)))
 		{
 			delete[] _pixels;

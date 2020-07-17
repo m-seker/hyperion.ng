@@ -19,3 +19,8 @@ target_link_libraries(hyperion-utils
 	Qt5::Gui
 	Qt5::Network
 )
+
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../../Simd/src)
+target_link_libraries(hyperion-utils ${CMAKE_CURRENT_BINARY_DIR}/../../../Simd/prj/cmake/build/libSimd.a)
+

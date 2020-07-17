@@ -55,10 +55,9 @@ public slots:
 	///
 	/// @brief Start a Hyperion instance
 	/// @param instance  Instance index
-	/// @param block     If true return when thread has been started
 	/// @return Return true on success, false if not found in db
 	///
-	bool startInstance(const quint8& inst, const bool& block = false);
+	bool startInstance(const quint8& inst);
 
 	///
 	/// @brief Stop a Hyperion instance

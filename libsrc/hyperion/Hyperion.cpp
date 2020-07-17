@@ -39,6 +39,10 @@
 // Boblight
 #include <boblightserver/BoblightServer.h>
 
+<<<<<<< Updated upstream
+=======
+#include <sys/time.h>
+>>>>>>> Stashed changes
 
 Hyperion::Hyperion(const quint8& instance)
 	: QObject()
@@ -531,6 +535,12 @@ void Hyperion::handleVisibleComponentChanged(const hyperion::Components &comp)
 
 void Hyperion::update()
 {
+    struct timeval te;
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("Hyperion update : %lld\n\n\n\n", milliseconds);
+
+
 	QMutexLocker lock(&_changes);
 
 	// Obtain the current priority channel

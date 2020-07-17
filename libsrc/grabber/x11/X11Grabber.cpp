@@ -1,6 +1,8 @@
 #include <utils/Logger.h>
 #include <grabber/X11Grabber.h>
 
+#include <sys/time.h>
+
 #include <xcb/randr.h>
 #include <xcb/xcb_event.h>
 
@@ -129,6 +131,7 @@ bool X11Grabber::Setup()
 
 int X11Grabber::grabFrame(Image<ColorRgb> & image, bool forceUpdate)
 {
+
 	if (!_enabled) return 0;
 
 	if (forceUpdate)
@@ -161,29 +164,60 @@ int X11Grabber::grabFrame(Image<ColorRgb> & image, bool forceUpdate)
 			}
 		};
 
+    struct timeval te;
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("A XShm Grabbing frame : %lld\n", milliseconds);
+
 		XRenderSetPictureTransform (_x11Display, _srcPicture, &_transform);
 
+
+    gettimeofday(&te, NULL); // get current time
+    milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("B XSm Grabbing frame : %lld\n", milliseconds);
 		// display, op, src, mask, dest, src_x = cropLeft,
 		// src_y = cropTop, mask_x, mask_y, dest_x, dest_y, width, height
 		XRenderComposite(
 			_x11Display, PictOpSrc, _srcPicture, None, _dstPicture, ( _src_x/_pixelDecimation),
 			(_src_y/_pixelDecimation), 0, 0, 0, 0, _width, _height);
 
+
+    gettimeofday(&te, NULL); // get current time
+    milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("C XSm Grabbing frame : %lld\n", milliseconds);
+
 		XSync(_x11Display, False);
+
+    gettimeofday(&te, NULL); // get current time
+    milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("D XSm Grabbing frame : %lld\n", milliseconds);
 
 		if (_XShmAvailable)
 		{
+
 			XShmGetImage(_x11Display, _pixmap, _xImage, 0, 0, AllPlanes);
 		}
 		else
 		{
 			_xImage = XGetImage(_x11Display, _pixmap, 0, 0, _width, _height, AllPlanes, ZPixmap);
 		}
+
+    gettimeofday(&te, NULL); // get current time
+    milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("E XSm Grabbing frame : %lld\n", milliseconds);
 	}
 	else if (_XShmAvailable)
 	{
 		// use xshm
+    struct timeval te;
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("B XShm Grabbing frame : %lld\n", milliseconds);
 		XShmGetImage(_x11Display, _window, _xImage, _src_x, _src_y, AllPlanes);
+
+    gettimeofday(&te, NULL); // get current time
+    milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    printf("B XSm Grabbed frame : %lld\n", milliseconds);
 	}
 	else
 	{

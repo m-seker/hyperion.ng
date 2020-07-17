@@ -206,6 +206,7 @@ void HyperionDaemon::freeObjects()
 	delete _osxGrabber;
 	delete _qtGrabber;
 	delete _v4l2Grabber;
+	delete _x11Grabber;
 
 	_v4l2Grabber = nullptr;
 #ifdef ENABLE_AVAHI
@@ -219,6 +220,7 @@ void HyperionDaemon::freeObjects()
 	_flatBufferServer = nullptr;
 	_protoServer = nullptr;
 	_ssdp = nullptr;
+	_x11Grabber = nullptr;
 	_webserver = nullptr;
 	_sslWebserver = nullptr;
 	_jsonServer = nullptr;
