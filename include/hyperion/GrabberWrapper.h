@@ -9,6 +9,7 @@
 
 #include <utils/Logger.h>
 #include <utils/Components.h>
+#include <utils/AudioPacket.h>
 #include <utils/Image.h>
 #include <utils/ColorRgb.h>
 #include <utils/VideoMode.h>
@@ -145,6 +146,11 @@ signals:
 	/// @brief Emit the final processed image
 	///
 	void systemImage(const QString& name, const Image<ColorRgb>& image);
+
+	///
+	/// @brief Emit the final processed audio packet
+	///
+	void systemAudio(const QString& name, const AudioPacket& audioPacket);
 
 private slots:
 	/// @brief Handle a source request event from Hyperion.

@@ -10,6 +10,7 @@
 // hyperion include
 #include <hyperion/Hyperion.h>
 #include <hyperion/MessageForwarder.h>
+#include <hyperion/AudioProcessor.h>
 #include <hyperion/ImageProcessor.h>
 #include <hyperion/ColorAdjustment.h>
 
@@ -38,7 +39,6 @@
 // Boblight
 #include <boblightserver/BoblightServer.h>
 
-
 Hyperion::Hyperion(const quint8& instance)
 	: QObject()
 	, _instIndex(instance)
@@ -46,6 +46,7 @@ Hyperion::Hyperion(const quint8& instance)
 	, _componentRegister(this)
 	, _ledString(hyperion::createLedString(getSetting(settings::LEDS).array(), hyperion::createColorOrder(getSetting(settings::DEVICE).object())))
 	, _imageProcessor(new ImageProcessor(_ledString, this))
+	, _audioProcessor(new AudioProcessor(_ledString, this))
 	, _muxer(_ledString.leds().size(), this)
 	, _raw2ledAdjustment(hyperion::createLedColorsAdjustment(_ledString.leds().size(), getSetting(settings::COLOR).object()))
 	, _effectEngine(nullptr)
@@ -133,6 +134,7 @@ void Hyperion::start()
 	connect(GlobalSignals::getInstance(), &GlobalSignals::clearGlobalInput, this, &Hyperion::clear);
 	connect(GlobalSignals::getInstance(), &GlobalSignals::setGlobalColor, this, &Hyperion::setColor);
 	connect(GlobalSignals::getInstance(), &GlobalSignals::setGlobalImage, this, &Hyperion::setInputImage);
+	connect(GlobalSignals::getInstance(), &GlobalSignals::setGlobalAudio, this, &Hyperion::setInputAudio);
 
 	// if there is no startup / background eff and no sending capture interface we probably want to push once BLACK (as PrioMuxer won't emit a prioritiy change)
 	update();
@@ -173,9 +175,6 @@ void Hyperion::freeObjects(bool emitCloseSignal)
 
 void Hyperion::handleSettingsUpdate(const settings::type& type, const QJsonDocument& config)
 {
-//	std::cout << "Hyperion::handleSettingsUpdate" << std::endl;
-//	std::cout << config.toJson().toStdString() << std::endl;
-
 	if(type == settings::COLOR)
 	{
 		const QJsonObject obj = config.object();
@@ -270,7 +269,7 @@ bool Hyperion::saveSettings(QJsonObject config, const bool& correct)
 
 int Hyperion::getLatchTime() const
 {
-  return _ledDeviceWrapper->getLatchTime();
+	return _ledDeviceWrapper->getLatchTime();
 }
 
 unsigned Hyperion::addSmoothingConfig(int settlingTime_ms, double ledUpdateFrequency_hz, unsigned updateDelay)
@@ -351,6 +350,31 @@ bool Hyperion::setInputImage(const int priority, const Image<ColorRgb>& image, i
 	}
 
 	if(_muxer.setInputImage(priority, image, timeout_ms))
+	{
+		// clear effect if this call does not come from an effect
+		if(clearEffect)
+			_effectEngine->channelCleared(priority);
+
+		// if this priority is visible, update immediately
+		if(priority == _muxer.getCurrentPriority())
+		{
+			update();
+		}
+
+		return true;
+	}
+	return false;
+}
+
+bool Hyperion::setInputAudio(const int priority, const AudioPacket& audioPacket, int64_t timeout_ms, const bool& clearEffect)
+{
+	if (!_muxer.hasPriority(priority))
+	{
+		emit GlobalSignals::getInstance()->globalRegRequired(priority);
+		return false;
+	}
+
+	if(_muxer.setInputAudio(priority, audioPacket, timeout_ms))
 	{
 		// clear effect if this call does not come from an effect
 		if(clearEffect)
@@ -546,15 +570,24 @@ void Hyperion::update()
 	int priority = _muxer.getCurrentPriority();
 	const PriorityMuxer::InputInfo priorityInfo = _muxer.getInputInfo(priority);
 
-	// copy image & process OR copy ledColors from muxer
-	Image<ColorRgb> image = priorityInfo.image;
-	if(image.size() > 3)
+	if (!priorityInfo.audioPacket.empty())
 	{
-		emit currentImage(image);
-		_ledBuffer = _imageProcessor->process(image);
+		_ledBuffer = _audioProcessor->process(priorityInfo.audioPacket);
 	}
 	else
-		_ledBuffer = priorityInfo.ledColors;
+	{
+		// copy image & process OR copy ledColors from muxer
+		Image<ColorRgb> image = priorityInfo.image;
+		if(image.size() > 3)
+		{
+			emit currentImage(image);
+			_ledBuffer = _imageProcessor->process(image);
+		}
+		else
+		{
+			_ledBuffer = priorityInfo.ledColors;
+		}
+	}
 
 	// emit rawLedColors before transform
 	emit rawLedColors(_ledBuffer);
@@ -618,9 +651,4 @@ void Hyperion::update()
 			}
 		}
 	}
-	//else
-	//{
-	//	/LEDDevice is disabled
-	//	Debug(_log, "LEDDevice is disabled - no update required");
-	//}
 }

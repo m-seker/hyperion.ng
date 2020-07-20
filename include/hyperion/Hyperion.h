@@ -38,6 +38,7 @@
 
 // Forward class declaration
 class HyperionDaemon;
+class AudioProcessor;
 class ImageProcessor;
 class MessageForwarder;
 class LinearColorSmoothing;
@@ -147,6 +148,17 @@ public slots:
 	bool setInputImage(const int priority, const Image<ColorRgb>& image, const int64_t timeout_ms = -1, const bool& clearEffect = true);
 
 	///
+	/// @brief   Update the current audio of a priority (prev registered with registerInput())
+	/// 		 DO NOT use this together with setInput() at the same time!
+	/// @param  priority     The priority to update
+	/// @param  audioPacket  The new audio packet
+	/// @param  timeout_ms   The new timeout (defaults to -1 endless)
+	/// @param  clearEffect  Should be true when NOT called from an effect
+	/// @return              True on success, false when priority is not found
+	///
+	bool setInputAudio(const int priority, const AudioPacket& audioPacket, const int64_t timeout_ms = -1, const bool& clearEffect = true);
+
+	///
 	/// Writes a single color to all the leds for the given time and priority
 	/// Registers comp color or provided type against muxer
 	/// Should be never used to update leds continuous
@@ -159,7 +171,6 @@ public slots:
 	///
 	void setColor(const int priority, const std::vector<ColorRgb> &ledColors, const int timeout_ms = -1, const QString& origin = "System" ,bool clearEffects = true);
 
-	///
 	/// @brief Set the given priority to inactive
 	/// @param priority  The priority
 	/// @return True on success false if not found
@@ -369,14 +380,6 @@ public slots:
 	void stop();
 
 signals:
-	/// Signal which is emitted when a priority channel is actively cleared
-	/// This signal will not be emitted when a priority channel time out
-	void channelCleared(int priority);
-
-	/// Signal which is emitted when all priority channels are actively cleared
-	/// This signal will not be emitted when a priority channel time out
-	void allChannelsCleared();
-
 	///
 	/// @brief Emits whenever a user request a component state change, it's up the component to listen
 	/// 	   and update the component state at the componentRegister
@@ -402,6 +405,9 @@ signals:
 
 	/// Signal which is emitted, when a new json message should be forwarded
 	void forwardJsonMessage(QJsonObject);
+
+	/// Signal which is emitted, when a new system proto audio packet should be forwarded
+	void forwardSystemAudioProtoMessage(const QString, const AudioPacket&);
 
 	/// Signal which is emitted, when a new system proto image should be forwarded
 	void forwardSystemProtoMessage(const QString, const Image<ColorRgb>);
@@ -507,6 +513,9 @@ private:
 
 	/// Image Processor
 	ImageProcessor* _imageProcessor;
+
+	/// Audio Processor
+	AudioProcessor* _audioProcessor;
 
 	std::vector<ColorOrder> _ledStringColorOrder;
 

@@ -88,6 +88,22 @@ if (ENABLE_QT)
 	target_link_libraries(hyperiond	qt-grabber)
 endif ()
 
+if (ENABLE_ALSA)
+	target_link_libraries(hyperiond	alsa-grabber)
+endif ()
+
+if (ENABLE_PULSE)
+	target_link_libraries(hyperiond	pulse-grabber)
+endif ()
+
+if (ENABLE_JACK)
+	target_link_libraries(hyperiond	jack-grabber)
+endif ()
+
+if (ENABLE_SOUNDIO)
+	target_link_libraries(hyperiond	soundio-grabber)
+endif ()
+
 if (ENABLE_CEC)
         target_link_libraries(hyperiond cechandler)
 endif ()

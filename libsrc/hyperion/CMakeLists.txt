@@ -31,3 +31,11 @@ target_link_libraries(hyperion
 if (ENABLE_AVAHI)
 	target_link_libraries(hyperion bonjour)
 endif ()
+
+if (ENABLE_ALSA)
+	find_package(FFTW REQUIRED)
+
+	include_directories(${FFTW_INCLUDES})
+
+	target_link_libraries(hyperion ${FFTW_LIBRARIES})
+endif ()

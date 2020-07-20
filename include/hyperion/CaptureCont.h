@@ -4,6 +4,7 @@
 #include <utils/settings.h>
 #include <utils/Components.h>
 #include <utils/Image.h>
+#include <utils/AudioPacket.h>
 
 class Hyperion;
 class QTimer;
@@ -18,6 +19,7 @@ class CaptureCont : public QObject
 public:
 	CaptureCont(Hyperion* hyperion);
 
+	void setSystemAudioEnable(const bool& enable);
 	void setSystemCaptureEnable(const bool& enable);
 	void setV4LCaptureEnable(const bool& enable);
 
@@ -37,6 +39,12 @@ private slots:
 	void handleSettingsUpdate(const settings::type& type, const QJsonDocument& config);
 
 	///
+	/// @brief forward system audio
+	/// @param audio  The audio
+	///
+	void handleSystemAudio(const QString& name, const AudioPacket& audioPacket);
+
+	///
 	/// @brief forward system image
 	/// @param image  The image
 	///
@@ -54,6 +62,11 @@ private slots:
 	void setV4lInactive();
 
 	///
+	/// @brief Is called from _systemAudioInactiveTimer to set source after specific time to inactive
+	///
+	void setSystemAudioInactive();
+
+	///
 	/// @brief Is called from _systemInactiveTimer to set source after specific time to inactive
 	///
 	void setSystemInactive();
@@ -67,6 +80,12 @@ private:
 	quint8 _systemCaptPrio;
 	QString _systemCaptName;
 	QTimer* _systemInactiveTimer;
+
+   	/// Reflect state of System audio capture and prio
+	bool _systemAudioEnabled;
+	quint8 _systemAudioPrio;
+	QString _systemAudioName;
+	QTimer* _systemAudioInactiveTimer;
 
 	/// Reflect state of v4l capture and prio
 	bool _v4lCaptEnabled;

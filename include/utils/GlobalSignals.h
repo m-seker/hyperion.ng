@@ -1,6 +1,7 @@
 #pragma once
 
 // util
+#include <utils/AudioPacket.h>
 #include <utils/Image.h>
 #include <utils/ColorRgb.h>
 #include <utils/Components.h>
@@ -33,6 +34,13 @@ signals:
 	///////////////////////////////////////
 
 	///
+	/// @brief PIPE SystemCapture audio packet from GrabberWrapper to Hyperion class
+	/// @param name   The name of the platform capture that is currently active
+	/// @param image  The prepared image
+	///
+	void setSystemAudio(const QString& name, const AudioPacket& audioPacket);
+
+	///
 	/// @brief PIPE SystemCapture images from GrabberWrapper to Hyperion class
 	/// @param name   The name of the platform capture that is currently active
 	/// @param image  The prepared image
@@ -62,6 +70,15 @@ signals:
 	/// @param[in] forceclearAll  Force the clear
 	///
 	void clearGlobalInput(int priority, bool forceClearAll=false);
+
+	///
+	/// @brief PIPE external audio packets over HyperionDaemon to Hyperion class
+	/// @param[in] priority    The priority of the channel
+	/// @param     audioPacket The prepared audio packet
+	/// @param[in] timeout_ms  The timeout in milliseconds
+	/// @param     clearEffect Should be true when NOT called from an effect
+	///
+	void setGlobalAudio(const int priority, const AudioPacket& audioPacket, const int timeout_ms, const bool& clearEffect = true);
 
 	///
 	/// @brief PIPE external images over HyperionDaemon to Hyperion class

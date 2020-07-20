@@ -22,7 +22,8 @@ enum Components
 	COMP_EFFECT,
 	COMP_LEDDEVICE,
 	COMP_FLATBUFSERVER,
-	COMP_PROTOSERVER
+	COMP_PROTOSERVER,
+    COMP_AUDIO
 };
 
 inline const char* componentToString(Components c)
@@ -42,6 +43,7 @@ inline const char* componentToString(Components c)
 		case COMP_LEDDEVICE:     return "LED device";
 		case COMP_FLATBUFSERVER: return "Image Receiver";
 		case COMP_PROTOSERVER:   return "Proto Server";
+        case COMP_AUDIO:         return "Audio grabber";
 		default:                 return "";
 	}
 }
@@ -63,6 +65,7 @@ inline const char* componentToIdString(Components c)
 		case COMP_LEDDEVICE:     return "LEDDEVICE";
 		case COMP_FLATBUFSERVER: return "FLATBUFSERVER";
 		case COMP_PROTOSERVER:   return "PROTOSERVER";
+		case COMP_AUDIO:         return "AUDIOGRABBER";
 		default:                 return "";
 	}
 }
@@ -83,6 +86,7 @@ inline Components stringToComponent(QString component)
 	if (component == "LEDDEVICE")     return COMP_LEDDEVICE;
 	if (component == "FLATBUFSERVER") return COMP_FLATBUFSERVER;
 	if (component == "PROTOSERVER")   return COMP_PROTOSERVER;
+	if (component == "AUDIOGRABBER")  return COMP_AUDIO;
 	return COMP_INVALID;
 }
 

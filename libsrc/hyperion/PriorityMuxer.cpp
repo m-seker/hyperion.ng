@@ -242,6 +242,46 @@ bool PriorityMuxer::setInputImage(const int priority, const Image<ColorRgb>& ima
 	return true;
 }
 
+bool PriorityMuxer::setInputAudio(const int priority, const AudioPacket& audioPacket, int64_t timeout_ms)
+{
+	if(!_activeInputs.contains(priority))
+	{
+		Error(_log,"setInputImage() used without registerInput() for priority '%d', probably the priority reached timeout",priority);
+		return false;
+	}
+
+	// calc final timeout
+	if(timeout_ms > 0)
+		timeout_ms = QDateTime::currentMSecsSinceEpoch() + timeout_ms;
+
+	InputInfo& input     = _activeInputs[priority];
+	// detect active <-> inactive changes
+	bool activeChange = false;
+	bool active = true;
+	if(input.timeoutTime_ms == -100 && timeout_ms != -100)
+	{
+		activeChange = true;
+	}
+	else if(timeout_ms == -100 && input.timeoutTime_ms != -100)
+	{
+		active = false;
+		activeChange = true;
+	}
+	// update input
+	input.timeoutTime_ms = timeout_ms;
+	input.audioPacket    = audioPacket;
+	input.ledColors.clear();
+
+	// emit active change
+	if(activeChange)
+	{
+		Debug(_log, "Priority %d is now %s", priority, active ? "active" : "inactive");
+		emit activeStateChanged(priority, active);
+		setCurrentTime();
+	}
+	return true;
+}
+
 bool PriorityMuxer::setInputInactive(const quint8& priority)
 {
 	Image<ColorRgb> image;

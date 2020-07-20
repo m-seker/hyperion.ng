@@ -21,6 +21,18 @@
 // Define to enable the qt grabber
 #cmakedefine ENABLE_QT
 
+// Define to enable the alsa grabber
+#cmakedefine ENABLE_ALSA
+
+// Define to enable the pulse grabber
+#cmakedefine ENABLE_PULSE
+
+// Define to enable the soundio grabber
+#cmakedefine ENABLE_SOUNDIO
+
+// Define to enable the jack grabber
+#cmakedefine ENABLE_JACK
+
 // Define to enable the spi-device
 #cmakedefine ENABLE_SPIDEV
 

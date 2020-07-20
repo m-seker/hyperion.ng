@@ -1,6 +1,5 @@
 #include <hyperion/Grabber.h>
 
-
 Grabber::Grabber(QString grabberName, int width, int height, int cropLeft, int cropRight, int cropTop, int cropBottom)
 	: _imageResampler()
 	, _useImageResampler(true)

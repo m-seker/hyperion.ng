@@ -46,6 +46,30 @@
 	typedef QObject QtWrapper;
 #endif
 
+#ifdef ENABLE_ALSA
+	#include <grabber/AlsaWrapper.h>
+#else
+	typedef QObject AlsaWrapper;
+#endif
+
+#ifdef ENABLE_PULSE
+	#include <grabber/PulseWrapper.h>
+#else
+	typedef QObject PulseWrapper;
+#endif
+
+#ifdef ENABLE_JACK
+	#include <grabber/JackWrapper.h>
+#else
+	typedef QObject JackWrapper;
+#endif
+
+#ifdef ENABLE_SOUNDIO
+	#include <grabber/SoundIOWrapper.h>
+#else
+	typedef QObject SoundIOWrapper;
+#endif
+
 #include <utils/Logger.h>
 #include <utils/VideoMode.h>
 
@@ -145,6 +169,10 @@ private:
 	void createGrabberOsx(const QJsonObject & grabberConfig);
 	void createGrabberX11(const QJsonObject & grabberConfig);
 	void createGrabberQt(const QJsonObject & grabberConfig);
+	void createGrabberAlsa(const QJsonObject & grabberConfig);
+	void createGrabberPulse(const QJsonObject & grabberConfig);
+	void createGrabberJack(const QJsonObject & grabberConfig);
+	void createGrabberSoundIO(const QJsonObject & grabberConfig);
 	void createCecHandler();
 
 	Logger*                    _log;
@@ -163,6 +191,10 @@ private:
 	FramebufferWrapper*        _fbGrabber;
 	OsxWrapper*                _osxGrabber;
 	QtWrapper*                 _qtGrabber;
+	AlsaWrapper*               _alsaGrabber;
+	PulseWrapper*              _pulseGrabber;
+	JackWrapper*               _jackGrabber;
+	SoundIOWrapper*            _soundioGrabber;
 	SSDPHandler*               _ssdp;
 	CECHandler*                _cecHandler;
 	FlatBufferServer*          _flatBufferServer;

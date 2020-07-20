@@ -16,6 +16,10 @@ CaptureCont::CaptureCont(Hyperion* hyperion)
 	, _systemCaptPrio(0)
 	, _systemCaptName()
 	, _systemInactiveTimer(new QTimer(this))
+	, _systemAudioEnabled(false)
+	, _systemAudioPrio(0)
+	, _systemAudioName()
+	, _systemAudioInactiveTimer(new QTimer(this))
 	, _v4lCaptEnabled(false)
 	, _v4lCaptPrio(0)
 	, _v4lCaptName()
@@ -32,6 +36,11 @@ CaptureCont::CaptureCont(Hyperion* hyperion)
 	_systemInactiveTimer->setSingleShot(true);
 	_systemInactiveTimer->setInterval(5000);
 
+	// inactive timer system
+	connect(_systemAudioInactiveTimer, &QTimer::timeout, this, &CaptureCont::setSystemAudioInactive);
+	_systemAudioInactiveTimer->setSingleShot(true);
+	_systemAudioInactiveTimer->setInterval(5000);
+
 	// inactive timer v4l
 	connect(_v4lInactiveTimer, &QTimer::timeout, this, &CaptureCont::setV4lInactive);
 	_v4lInactiveTimer->setSingleShot(true);
@@ -39,6 +48,9 @@ CaptureCont::CaptureCont(Hyperion* hyperion)
 
 	// init
 	handleSettingsUpdate(settings::INSTCAPTURE, _hyperion->getSetting(settings::INSTCAPTURE));
+
+	/* TODO : MURSE */
+	setSystemAudioEnable(true);
 }
 
 void CaptureCont::handleV4lImage(const QString& name, const Image<ColorRgb> & image)
@@ -50,6 +62,17 @@ void CaptureCont::handleV4lImage(const QString& name, const Image<ColorRgb> & im
 	}
 	_v4lInactiveTimer->start();
 	_hyperion->setInputImage(_v4lCaptPrio, image);
+}
+
+void CaptureCont::handleSystemAudio(const QString& name, const AudioPacket& audioPacket)
+{
+	if(_systemAudioName != name)
+	{
+		_hyperion->registerInput(_systemAudioPrio, hyperion::COMP_AUDIO, "System", name);
+		_systemAudioName = name;
+	}
+	_v4lInactiveTimer->start();
+	_hyperion->setInputAudio(_systemAudioPrio, audioPacket);
 }
 
 void CaptureCont::handleSystemImage(const QString& name, const Image<ColorRgb>& image)
@@ -86,6 +109,29 @@ void CaptureCont::setSystemCaptureEnable(const bool& enable)
 	}
 }
 
+void CaptureCont::setSystemAudioEnable(const bool& enable)
+{
+	if(_systemAudioEnabled != enable)
+	{
+		if(enable)
+		{
+			_hyperion->registerInput(_systemAudioPrio, hyperion::COMP_AUDIO);
+			connect(GlobalSignals::getInstance(), &GlobalSignals::setSystemAudio, this, &CaptureCont::handleSystemAudio);
+			connect(GlobalSignals::getInstance(), &GlobalSignals::setSystemAudio, _hyperion, &Hyperion::forwardSystemAudioProtoMessage);
+		}
+		else
+		{
+			disconnect(GlobalSignals::getInstance(), &GlobalSignals::setSystemAudio, 0, 0);
+			_hyperion->clear(_systemAudioPrio);
+			_systemAudioInactiveTimer->stop();
+			_systemAudioName = "";
+		}
+		_systemAudioEnabled = enable;
+		_hyperion->setNewComponentState(hyperion::COMP_AUDIO, enable);
+		emit GlobalSignals::getInstance()->requestSource(hyperion::COMP_AUDIO, int(_hyperion->getInstanceIndex()), enable);
+	}
+}
+
 void CaptureCont::setV4LCaptureEnable(const bool& enable)
 {
 	if(_v4lCaptEnabled != enable)
@@ -114,15 +160,20 @@ void CaptureCont::handleSettingsUpdate(const settings::type& type, const QJsonDo
 	if(type == settings::INSTCAPTURE)
 	{
 		const QJsonObject& obj = config.object();
-		if(_v4lCaptPrio != obj["v4lPriority"].toInt(240))
+		if(_v4lCaptPrio != obj["v4lPriority"].toInt(230))
 		{
 			setV4LCaptureEnable(false); // clear prio
-			_v4lCaptPrio = obj["v4lPriority"].toInt(240);
+			_v4lCaptPrio = obj["v4lPriority"].toInt(230);
 		}
-		if(_systemCaptPrio != obj["systemPriority"].toInt(250))
+		if(_systemCaptPrio != obj["systemPriority"].toInt(240))
 		{
 			setSystemCaptureEnable(false); // clear prio
-			_systemCaptPrio = obj["systemPriority"].toInt(250);
+			_systemCaptPrio = obj["systemPriority"].toInt(240);
+		}
+		if(_systemCaptPrio != obj["audioPriority"].toInt(220))
+		{
+			setSystemAudioEnable(false); // clear prio
+			_systemAudioPrio = obj["audioPriority"].toInt(220);
 		}
 
 		setV4LCaptureEnable(obj["v4lEnable"].toBool(true));
@@ -140,6 +191,10 @@ void CaptureCont::handleCompStateChangeRequest(const hyperion::Components compon
 	{
 		setV4LCaptureEnable(enable);
 	}
+	else if(component == hyperion::COMP_AUDIO)
+	{
+		setSystemAudioEnable(enable);
+	}
 }
 
 void CaptureCont::setV4lInactive()
@@ -150,4 +205,9 @@ void CaptureCont::setV4lInactive()
 void CaptureCont::setSystemInactive()
 {
 	_hyperion->setInputInactive(_systemCaptPrio);
+}
+
+void CaptureCont::setSystemAudioInactive()
+{
+	_hyperion->setInputInactive(_systemAudioPrio);
 }

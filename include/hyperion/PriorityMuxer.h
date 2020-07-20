@@ -13,6 +13,7 @@
 // Utils includes
 #include <utils/ColorRgb.h>
 #include <utils/Image.h>
+#include <utils/AudioPacket.h>
 #include <utils/Components.h>
 
 // global defines
@@ -44,6 +45,8 @@ public:
 		std::vector<ColorRgb> ledColors;
 		/// The raw Image (size should be preprocessed!)
 		Image<ColorRgb> image;
+		/// The raw AudioPacket (size should be preprocessed!)
+        AudioPacket audioPacket;
 		/// The component
 		hyperion::Components componentId;
 		/// Who set it
@@ -161,6 +164,15 @@ public:
 	/// @return             True on success, false when priority is not found
 	///
 	bool setInputImage(const int priority, const Image<ColorRgb>& image, int64_t timeout_ms = -1);
+
+	///
+	/// @brief   Update the current image of a priority (prev registered with registerInput())
+	/// @param  priority    The priority to update
+	/// @param  audioPacket The new audio packet
+	/// @param  timeout_ms  The new timeout (defaults to -1 endless)
+	/// @return             True on success, false when priority is not found
+	///
+	bool setInputAudio(const int priority, const AudioPacket& audioPacket, int64_t timeout_ms = -1);
 
 	///
 	/// @brief Set the given priority to inactive

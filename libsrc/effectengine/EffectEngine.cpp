@@ -31,10 +31,6 @@ EffectEngine::EffectEngine(Hyperion * hyperion)
 	Q_INIT_RESOURCE(EffectEngine);
 	qRegisterMetaType<hyperion::Components>("hyperion::Components");
 
-	// connect the Hyperion channel clear feedback
-	connect(_hyperion, SIGNAL(channelCleared(int)), this, SLOT(channelCleared(int)));
-	connect(_hyperion, SIGNAL(allChannelsCleared()), this, SLOT(allChannelsCleared()));
-
 	// get notifications about refreshed effect list
 	connect(_effectFileHandler, &EffectFileHandler::effectListChanged, this, &EffectEngine::handleUpdatedEffectList);
 

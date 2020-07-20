@@ -79,6 +79,10 @@ HyperionDaemon::HyperionDaemon(const QString rootPath, QObject *parent, const bo
 		, _fbGrabber(nullptr)
 		, _osxGrabber(nullptr)
 		, _qtGrabber(nullptr)
+		, _alsaGrabber(nullptr)
+		, _pulseGrabber(nullptr)
+		, _jackGrabber(nullptr)
+		, _soundioGrabber(nullptr)
 		, _ssdp(nullptr)
 		, _cecHandler(nullptr)
 		, _currVideoMode(VideoMode::VIDEO_2D)
@@ -87,6 +91,7 @@ HyperionDaemon::HyperionDaemon(const QString rootPath, QObject *parent, const bo
 
 	// Register metas for thread queued connection
 	qRegisterMetaType<Image<ColorRgb>>("Image<ColorRgb>");
+	qRegisterMetaType<AudioPacket>("AudioPacket");
 	qRegisterMetaType<hyperion::Components>("hyperion::Components");
 	qRegisterMetaType<settings::type>("settings::type");
 	qRegisterMetaType<VideoMode>("VideoMode");
@@ -135,7 +140,7 @@ HyperionDaemon::HyperionDaemon(const QString rootPath, QObject *parent, const bo
 	connect(this, &HyperionDaemon::videoMode, _instanceManager, &HyperionIManager::newVideoMode);
 
 // ---- grabber -----
-#if !defined(ENABLE_DISPMANX) && !defined(ENABLE_OSX) && !defined(ENABLE_FB) && !defined(ENABLE_X11) && !defined(ENABLE_AMLOGIC) && !defined(ENABLE_QT)
+#if !defined(ENABLE_DISPMANX) && !defined(ENABLE_OSX) && !defined(ENABLE_FB) && !defined(ENABLE_X11) && !defined(ENABLE_AMLOGIC) && !defined(ENABLE_QT) && !defined(ENABLE_ALSA) && !defined(ENABLE_PULSE) && !defined(ENABLE_JACK) && !defined(ENABLE_SOUNDIO)
 	Warning(_log, "No platform capture can be instantiated, because all grabbers have been left out from the build");
 #endif
 
@@ -147,6 +152,11 @@ HyperionDaemon::HyperionDaemon(const QString rootPath, QObject *parent, const bo
 
 	// ---- network services -----
 	startNetworkServices();
+
+	//createGrabberAlsa({});
+	//createGrabberPulse({});
+	//createGrabberJack({});
+	createGrabberSoundIO({});
 }
 
 HyperionDaemon::~HyperionDaemon()
@@ -219,6 +229,10 @@ void HyperionDaemon::freeObjects()
 	delete _osxGrabber;
 	delete _qtGrabber;
 	delete _v4l2Grabber;
+	delete _alsaGrabber;
+	delete _pulseGrabber;
+	delete _jackGrabber;
+	delete _soundioGrabber;
 
 	_v4l2Grabber = nullptr;
 	_cecHandler = nullptr;
@@ -228,6 +242,10 @@ void HyperionDaemon::freeObjects()
 	_fbGrabber = nullptr;
 	_osxGrabber = nullptr;
 	_qtGrabber = nullptr;
+	_alsaGrabber = nullptr;
+	_pulseGrabber = nullptr;
+	_jackGrabber = nullptr;
+	_soundioGrabber = nullptr;
 	_flatBufferServer = nullptr;
 	_protoServer = nullptr;
 	_ssdp = nullptr;
@@ -420,6 +438,38 @@ void HyperionDaemon::handleSettingsUpdate(const settings::type &settingsType, co
 				_qtGrabber = nullptr;
 			}
 			#endif
+			#ifdef ENABLE_ALSA
+			if(_alsaGrabber != nullptr)
+			{
+				_alsaGrabber->stop();
+				delete _alsaGrabber;
+				_alsaGrabber = nullptr;
+			}
+			#endif
+			#ifdef ENABLE_PULSE
+			if(_pulseGrabber != nullptr)
+			{
+				_pulseGrabber->stop();
+				delete _pulseGrabber;
+				_pulseGrabber = nullptr;
+			}
+			#endif
+			#ifdef ENABLE_JACK
+			if(_jackGrabber != nullptr)
+			{
+				_jackGrabber->stop();
+				delete _jackGrabber;
+				_jackGrabber = nullptr;
+			}
+			#endif
+			#ifdef ENABLE_SOUNDIO
+			if(_soundioGrabber != nullptr)
+			{
+				_soundioGrabber->stop();
+				delete _soundioGrabber;
+				_soundioGrabber = nullptr;
+			}
+			#endif
 
 			// create/start capture interface
 			if (type == "framebuffer")
@@ -468,6 +518,38 @@ void HyperionDaemon::handleSettingsUpdate(const settings::type &settingsType, co
 					createGrabberQt(grabberConfig);
 				#ifdef ENABLE_QT
 				_qtGrabber->tryStart();
+				#endif
+			}
+			else if (type == "alsa")
+			{
+				if (_alsaGrabber == nullptr)
+					createGrabberAlsa(grabberConfig);
+				#ifdef ENABLE_ALSA
+				_alsaGrabber->tryStart();
+				#endif
+			}
+			else if (type == "pulse")
+			{
+				if (_pulseGrabber == nullptr)
+					createGrabberPulse(grabberConfig);
+				#ifdef ENABLE_PULSE
+				_pulseGrabber->tryStart();
+				#endif
+			}
+			else if (type == "jack")
+			{
+				if (_jackGrabber == nullptr)
+					createGrabberJack(grabberConfig);
+				#ifdef ENABLE_JACK
+				_jackGrabber->tryStart();
+				#endif
+			}
+			else if (type == "soundio")
+			{
+				if (_soundioGrabber == nullptr)
+					createGrabberSoundIO(grabberConfig);
+				#ifdef ENABLE_SOUNDIO
+				_soundioGrabber->tryStart();
 				#endif
 			}
 			else
@@ -638,6 +720,70 @@ void HyperionDaemon::createGrabberOsx(const QJsonObject &grabberConfig)
 	Info(_log, "OSX grabber created");
 #else
 	Error(_log, "The osx grabber can not be instantiated, because it has been left out from the build");
+#endif
+}
+
+void HyperionDaemon::createGrabberAlsa(const QJsonObject &grabberConfig)
+{
+#ifdef ENABLE_ALSA
+	// Construct and start the alsa grabber if the configuration is present
+	_alsaGrabber = new AlsaWrapper(_grabber_frequency);
+
+	// connect to HyperionDaemon signal
+	connect(this, &HyperionDaemon::videoMode, _alsaGrabber, &AlsaWrapper::setVideoMode);
+	connect(this, &HyperionDaemon::settingsChanged, _alsaGrabber, &AlsaWrapper::handleSettingsUpdate);
+
+	Info(_log, "ALSA grabber created");
+#else
+	Error(_log, "The alsa grabber can not be instantiated, because it has been left out from the build");
+#endif
+}
+
+void HyperionDaemon::createGrabberPulse(const QJsonObject &grabberConfig)
+{
+#ifdef ENABLE_PULSE
+	// Construct and start the pulse grabber if the configuration is present
+	_pulseGrabber = new PulseWrapper(_grabber_frequency);
+
+	// connect to HyperionDaemon signal
+	connect(this, &HyperionDaemon::videoMode, _pulseGrabber, &PulseWrapper::setVideoMode);
+	connect(this, &HyperionDaemon::settingsChanged, _pulseGrabber, &PulseWrapper::handleSettingsUpdate);
+
+	Info(_log, "PULSE grabber created");
+#else
+	Error(_log, "The pulse grabber can not be instantiated, because it has been left out from the build");
+#endif
+}
+
+void HyperionDaemon::createGrabberJack(const QJsonObject &grabberConfig)
+{
+#ifdef ENABLE_JACK
+	// Construct and start the jack grabber if the configuration is present
+	_jackGrabber = new JackWrapper(_grabber_frequency);
+
+	// connect to HyperionDaemon signal
+	connect(this, &HyperionDaemon::videoMode, _jackGrabber, &JackWrapper::setVideoMode);
+	connect(this, &HyperionDaemon::settingsChanged, _jackGrabber, &JackWrapper::handleSettingsUpdate);
+
+	Info(_log, "JACK grabber created");
+#else
+	Error(_log, "The jack grabber can not be instantiated, because it has been left out from the build");
+#endif
+}
+
+void HyperionDaemon::createGrabberSoundIO(const QJsonObject &grabberConfig)
+{
+#ifdef ENABLE_SOUNDIO
+	// Construct and start the soundio grabber if the configuration is present
+	_soundioGrabber = new SoundIOWrapper(_grabber_frequency);
+
+	// connect to HyperionDaemon signal
+	connect(this, &HyperionDaemon::videoMode, _soundioGrabber, &SoundIOWrapper::setVideoMode);
+	connect(this, &HyperionDaemon::settingsChanged, _soundioGrabber, &SoundIOWrapper::handleSettingsUpdate);
+
+	Info(_log, "SOUNDIO grabber created");
+#else
+	Error(_log, "The soundio grabber can not be instantiated, because it has been left out from the build");
 #endif
 }
 

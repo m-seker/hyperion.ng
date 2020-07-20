@@ -25,3 +25,19 @@ endif()
 if (ENABLE_QT)
 	add_subdirectory(qt)
 endif()
+
+if (ENABLE_ALSA)
+	add_subdirectory(alsa)
+endif()
+
+if (ENABLE_PULSE)
+	add_subdirectory(pulse)
+endif()
+
+if (ENABLE_JACK)
+	add_subdirectory(jack)
+endif()
+
+if (ENABLE_SOUNDIO)
+	add_subdirectory(soundio)
+endif()
