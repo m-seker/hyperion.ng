@@ -29,3 +29,7 @@ endif()
 if (ENABLE_QT)
 	add_subdirectory(qt)
 endif()
+
+if (ENABLE_OBS)
+	add_subdirectory(obs)
+endif()

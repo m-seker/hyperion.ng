@@ -42,6 +42,7 @@ SET ( DEFAULT_OSX                         OFF )
 SET ( DEFAULT_X11                         OFF )
 SET ( DEFAULT_XCB                         OFF )
 SET ( DEFAULT_QT                          ON  )
+SET ( DEFAULT_OBS                         OFF )
 SET ( DEFAULT_WS281XPWM                   OFF )
 SET ( DEFAULT_AVAHI                       ON  )
 SET ( DEFAULT_USE_SHARED_AVAHI_LIBS       ON  )
@@ -159,6 +160,9 @@ message(STATUS "ENABLE_FB = ${ENABLE_FB}")
 
 option(ENABLE_OSX "Enable the osx grabber" ${DEFAULT_OSX} )
 message(STATUS "ENABLE_OSX = ${ENABLE_OSX}")
+
+option(ENABLE_OBS "Enable the obs grabber" ${DEFAULT_OBS} )
+message(STATUS "ENABLE_OBS = ${ENABLE_OBS}")
 
 option(ENABLE_SPIDEV   "Enable the SPIDEV device" ${DEFAULT_SPIDEV} )
 message(STATUS "ENABLE_SPIDEV   = ${ENABLE_SPIDEV}")

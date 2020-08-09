@@ -33,3 +33,7 @@ endif()
 if(ENABLE_OSX)
 	add_subdirectory(hyperion-osx)
 endif()
+
+if(ENABLE_OBS)
+	add_subdirectory(hyperion-obs)
+endif()
